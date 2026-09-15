@@ -1,14 +1,14 @@
-name: Mini Agent 03 CI
+name: Mini Agent 03 Tool CI
 
 on:
   push:
     paths:
       - "mini_agent_03_tool/**"
-      - ".github/workflows/mini-agent-03-ci.yml"
+      - ".github/workflows/mini-agent-03-tool-ci.yml"
   pull_request:
     paths:
       - "mini_agent_03_tool/**"
-      - ".github/workflows/mini-agent-03-ci.yml"
+      - ".github/workflows/mini-agent-03-tool-ci.yml"
   workflow_dispatch:
 
 permissions:
