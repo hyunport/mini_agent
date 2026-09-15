@@ -1,0 +1,33 @@
+name: mini-agent-01-release
+
+services:
+  backend:
+    image: ${DOCKER_HUB_USERNAME:?DOCKER_HUB_USERNAME을 .env에 설정하세요}/mini-agent-01-backend:${IMAGE_TAG:-1.0.0}
+    env_file:
+      - ./backend/.env
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    image: ${DOCKER_HUB_USERNAME:?DOCKER_HUB_USERNAME을 .env에 설정하세요}/mini-agent-01-frontend:${IMAGE_TAG:-1.0.0}
+    env_file:
+      - ./frontend/.env
+    environment:
+      BACKEND_API_URL: http://backend:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

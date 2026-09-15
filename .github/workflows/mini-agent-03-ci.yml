@@ -1,0 +1,46 @@
+name: Mini Agent 03 CI
+
+on:
+  push:
+    paths:
+      - "mini_agent_03_tool/**"
+      - ".github/workflows/mini-agent-03-ci.yml"
+  pull_request:
+    paths:
+      - "mini_agent_03_tool/**"
+      - ".github/workflows/mini-agent-03-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: mini_agent_03_tool/backend
+      LLM_PROVIDER: mock
+      WEATHER_MODE: mock
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r mini_agent_03_tool/requirements.txt
+
+      - name: Test backend
+        run: python -m pytest mini_agent_03_tool/backend/tests -q
+
+      - name: Validate Compose
+        run: docker compose -f mini_agent_03_tool/docker/compose.yml config --quiet
+
+      - name: Build Docker images
+        run: docker compose -f mini_agent_03_tool/docker/compose.yml build
