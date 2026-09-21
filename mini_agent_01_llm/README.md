@@ -78,3 +78,70 @@ Provider 비교는 `Gemini → GPT → Ollama/Llama` 순서로 진행합니다. 
 호출량과 비용을 확인하고, Ollama는 Docker와 모델 준비 상태를 먼저 확인합니다.
 
 이미지 분석과 음성 생성은 01 단원의 `1-5`, `1-6` 메뉴에서 진행합니다.
+
+## Docker Compose 실행
+
+```powershell
+cd C:\Port_수업자료\mini\mini_agent\mini_agent_01_llm
+docker compose --env-file .env config --quiet
+docker compose --env-file .env up -d --build
+docker compose ps
+```
+
+- Frontend: `http://127.0.0.1:8501`
+- Backend Health: `http://127.0.0.1:8000/health`
+- Backend API 문서: `http://127.0.0.1:8000/docs`
+
+종료할 때는 Data Volume을 사용하지 않으므로 다음 명령으로 Container만 내립니다.
+
+```powershell
+docker compose down
+```
+
+## `wk01` CI/CD
+
+Workflow는 `.github/workflows/mini-agent-01-llm-cicd.yml`에 있습니다.
+
+```text
+Push/Pull Request
+→ Backend Test
+→ Compose 문법 검증
+→ Backend·Frontend Image Build
+→ main Push 또는 deploy=true 수동 실행
+→ wk01 Environment 승인
+→ EC2 Source 복사·Compose 재실행
+→ Backend·Frontend Health 확인
+```
+
+GitHub Repository의 `Settings → Environments`에서 `wk01`을 만들고 다음
+Environment Secret을 등록합니다.
+
+| Secret | 내용 |
+| --- | --- |
+| `AWS_HOST` | EC2 Public IPv4 또는 Public DNS |
+| `AWS_USER` | Ubuntu는 `ubuntu`, Amazon Linux는 `ec2-user` |
+| `AWS_SSH_PRIVATE_KEY` | EC2 배포용 Private Key 전체 |
+| `AWS_SSH_KNOWN_HOSTS` | 지문을 확인한 EC2 known_hosts 항목 |
+
+EC2에서 최초 한 번 배포 폴더와 `.env`를 준비합니다.
+
+```bash
+mkdir -p ~/mini-agent-01-llm
+chmod 700 ~/mini-agent-01-llm
+```
+
+`.env`는 `~/mini-agent-01-llm/.env`에 두고 `chmod 600` 권한을 적용합니다.
+Workflow는 Secret 파일을 GitHub에서 전송하지 않고 EC2에 있는 `.env`를 유지합니다.
+
+배포 후에는 EC2에서 다음을 확인합니다.
+
+```bash
+cd ~/mini-agent-01-llm
+docker compose ps
+curl --fail http://127.0.0.1:8000/health
+curl --fail http://127.0.0.1:8501/_stcore/health
+```
+
+Frontend의 사이드바에 `wk01 CI/CD 배포`가 표시되면 수정 내용까지
+서버에 반영된 것입니다. 실습 후에는 EC2 Security Group의 SSH `22`를
+`0.0.0.0/0`으로 유지하지 말고 관리자 IP로 다시 제한합니다.

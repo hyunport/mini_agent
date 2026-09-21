@@ -31,6 +31,7 @@ navigation = st.navigation(
 with st.sidebar:
     st.title("🤖 Mini Agent 01")
     st.caption("05 과정 · 01_llm-to-agent")
+    st.caption("wk01 CI/CD 배포")
     st.page_link(home_page, label="🏠 HOME")
 
     st.divider()
